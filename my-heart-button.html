@@ -1,0 +1,133 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heart Button</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      margin: 0;
+      position: relative;
+      flex-direction: column;
+    }
+    .banner {
+      position: absolute;
+      top: 20px; /* Detached from top */
+      left: 20px; /* Detached from left */
+      right: 20px; /* Detached from right */
+      background-color: #000000; /* Black background */
+      color: white;
+      text-align: center;
+      padding: 15px 20px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      border-radius: 12px; /* Rounded corners */
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    .heart-button {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      background-color: black;
+      transform: rotate(45deg);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+      margin-top: 100px; /* Increased to accommodate banner */
+    }
+    .heart-button::before,
+    .heart-button::after {
+      content: '';
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background-color: black;
+      border-radius: 50%;
+    }
+    .heart-button::before {
+      top: -30px;
+      left: 0;
+    }
+    .heart-button::after {
+      left: -30px;
+      top: 0;
+    }
+    .heart-button:hover {
+      background-color: #333;
+      transform: rotate(45deg) scale(1.1);
+    }
+    .heart-button::before:hover,
+    .heart-button::after:hover {
+      background-color: #333;
+    }
+    .heart-button:active {
+      transform: rotate(45deg) scale(0.95);
+    }
+    #counter {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">Russia just accepted my visa application. Hurrah!</div>
+  <div class="heart-button" id="heartButton"></div>
+  <div id="counter">Clicks: 0</div>
+  <script>
+    let count = 0;
+    document.getElementById('heartButton').addEventListener('click', () => {
+      count++;
+      document.getElementById('counter').textContent = `Clicks: ${count}`;
+    });
+  </script>
+</body>
+</html>
